@@ -90,7 +90,7 @@ Edit `config_pli.m` to customize. All options explained below:
 
 ## Output
 
-Results are saved in **long format** (tidy data) — easy to filter, pivot, and analyze.
+Results are saved in **long format** (tidy data) - easy to filter, pivot, and analyze.
 
 ### Excel Columns
 | Column        | Description                                       |
