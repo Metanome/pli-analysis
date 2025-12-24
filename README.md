@@ -90,17 +90,28 @@ Edit `config_pli.m` to customize. All options explained below:
 
 ## Output
 
-### Excel Columns
-| Column                       | Description              |
-| ---------------------------- | ------------------------ |
-| `FileName`                   | Source file              |
-| `QC_Passed`                  | Quality control status   |
-| `[Band]_[L]_[R]`             | PLI value (0-1)          |
-| `[Band]_[L]_[R]_wPLI`        | Weighted PLI value       |
-| `[Band]_[L]_[R]_Significant` | Statistical significance |
-| `[Band]_[L]_[R]_PValue`      | P-value                  |
+Results are saved in **long format** (tidy data) — easy to filter, pivot, and analyze.
 
-### Interpreting Values
+### Excel Columns
+| Column        | Description                                       |
+| ------------- | ------------------------------------------------- |
+| `FileName`    | Source EEG file                                   |
+| `QC_Passed`   | Quality control status (TRUE/FALSE)               |
+| `Band`        | Frequency band (Delta, Theta, Alpha, Beta, Gamma) |
+| `Pair`        | Electrode pair (e.g., Fp1-Fp2)                    |
+| `PLI`         | Phase Lag Index (0-1)                             |
+| `wPLI`        | Weighted PLI (0-1)                                |
+| `Significant` | Statistical significance (TRUE/FALSE)             |
+| `PValue`      | P-value from surrogate testing                    |
+
+### Example Output
+| FileName  | QC_Passed | Band  | Pair    | PLI  | wPLI | Significant | PValue |
+| --------- | --------- | ----- | ------- | ---- | ---- | ----------- | ------ |
+| file1.edf | TRUE      | Delta | Fp1-Fp2 | 0.32 | 0.28 | TRUE        | 0.012  |
+| file1.edf | TRUE      | Delta | F7-F8   | 0.18 | 0.15 | FALSE       | 0.234  |
+| file1.edf | TRUE      | Theta | Fp1-Fp2 | 0.41 | 0.38 | TRUE        | 0.003  |
+
+### Interpreting PLI Values
 - **0.0-0.2**: Weak connectivity
 - **0.2-0.4**: Moderate connectivity
 - **0.4-0.6**: Strong connectivity

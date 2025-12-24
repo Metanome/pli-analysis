@@ -78,8 +78,9 @@ bandNames = fieldnames(frequencyBands);
 numBands = length(bandNames);
 numPairs = size(interhemisphericPairs, 1);
 
-analysisResults = cell(1, numFiles);
-processingStatus = true(numFiles, 1);
+% Initialize results table (long format)
+allResults = {};
+rowIdx = 0;
 
 for fileIdx = 1:numFiles
     currentFilename = eegFiles(fileIdx).name;
@@ -128,19 +129,16 @@ for fileIdx = 1:numFiles
         channelLabels = {EEG.chanlocs.labels};
         fprintf('  Loaded: %d ch, %.1f s @ %.1f Hz\n', length(channelLabels), EEG.pnts/EEG.srate, EEG.srate);
 
+        % Store file-level results for topoplots
         fileResults = struct();
         fileResults.FileName = string(currentFilename);
 
         %% Quality Control
+        qcPassed = true;
         if config.qc.enabled
             qc = compute_quality_metrics(EEG, config);
             fprintf('  QC: %s', qc.status);
-
-            fileResults.QC_Passed = qc.passed;
-            fileResults.QC_BadChannels = qc.numBadChannels;
-            fileResults.QC_Duration = qc.duration;
-            fileResults.QC_SamplingRate = qc.samplingRate;
-            fileResults.QC_MeanVariance = qc.meanVariance;
+            qcPassed = qc.passed;
 
             if ~isempty(qc.warnings)
                 fprintf('\n');
@@ -169,10 +167,16 @@ for fileIdx = 1:numFiles
             for pairIdx = 1:numPairs
                 leftElectrode = interhemisphericPairs{pairIdx, 1};
                 rightElectrode = interhemisphericPairs{pairIdx, 2};
+                pairName = sprintf('%s-%s', leftElectrode, rightElectrode);
 
                 leftIdx = findChannelIndex(channelLabels, leftElectrode);
                 rightIdx = findChannelIndex(channelLabels, rightElectrode);
-                columnName = sprintf('%s_%s_%s', currentBand, leftElectrode, rightElectrode);
+
+                % Initialize row values
+                pliValue = NaN;
+                wpliValue = NaN;
+                isSig = false;
+                pVal = 1;
 
                 if ~isnan(leftIdx) && ~isnan(rightIdx)
                     phaseDiff = phaseData(leftIdx, :) - phaseData(rightIdx, :);
@@ -180,15 +184,11 @@ for fileIdx = 1:numFiles
                     % PLI
                     if config.analysis.computePLI
                         pliValue = abs(mean(sign(sin(phaseDiff))));
-                        fileResults.(columnName) = pliValue;
-                    else
-                        pliValue = NaN;
                     end
 
                     % wPLI
                     if config.analysis.computeWPLI
                         wpliValue = compute_wPLI(phaseData(leftIdx, :), phaseData(rightIdx, :));
-                        fileResults.([columnName '_wPLI']) = wpliValue;
                     end
 
                     % Significance
@@ -196,24 +196,32 @@ for fileIdx = 1:numFiles
                         [isSig, pVal, ~] = compute_significance(...
                             phaseData(leftIdx, :), phaseData(rightIdx, :), ...
                             pliValue, config.stats.numSurrogates, config.stats.alphaLevel);
-                        fileResults.([columnName '_Significant']) = isSig;
-                        fileResults.([columnName '_PValue']) = pVal;
+                    end
+
+                    % Store for topoplots (wide format)
+                    columnName = sprintf('%s_%s_%s', currentBand, leftElectrode, rightElectrode);
+                    fileResults.(columnName) = pliValue;
+                    if config.analysis.computeWPLI
+                        fileResults.([columnName '_wPLI']) = wpliValue;
                     end
                 else
-                    % Missing channels
-                    if config.analysis.computePLI, fileResults.(columnName) = NaN; end
-                    if config.analysis.computeWPLI, fileResults.([columnName '_wPLI']) = NaN; end
-                    if config.analysis.computeSignificance
-                        fileResults.([columnName '_Significant']) = false;
-                        fileResults.([columnName '_PValue']) = 1;
-                    end
                     if isnan(leftIdx), fprintf('    Warning: %s not found\n', leftElectrode); end
                     if isnan(rightIdx), fprintf('    Warning: %s not found\n', rightElectrode); end
                 end
+
+                % Add row to results (long format)
+                rowIdx = rowIdx + 1;
+                allResults{rowIdx, 1} = string(currentFilename);
+                allResults{rowIdx, 2} = qcPassed;
+                allResults{rowIdx, 3} = string(currentBand);
+                allResults{rowIdx, 4} = string(pairName);
+                allResults{rowIdx, 5} = pliValue;
+                allResults{rowIdx, 6} = wpliValue;
+                allResults{rowIdx, 7} = isSig;
+                allResults{rowIdx, 8} = pVal;
             end
         end
 
-        analysisResults{fileIdx} = fileResults;
         fprintf('  Done (%d bands x %d pairs)\n', numBands, numPairs);
 
         %% Generate Topoplots
@@ -228,7 +236,6 @@ for fileIdx = 1:numFiles
         fprintf('\n');
 
     catch ME
-        processingStatus(fileIdx) = false;
         fprintf('  FAILED: %s\n', ME.message);
         fprintf('  Stack: %s (line %d)\n\n', ME.stack(1).name, ME.stack(1).line);
     end
@@ -239,23 +246,24 @@ fprintf('========================================\n');
 fprintf('EXPORTING RESULTS\n');
 fprintf('========================================\n\n');
 
-successfulResults = analysisResults(processingStatus);
-
-if isempty(successfulResults)
-    fprintf('ERROR: No files processed successfully.\n');
+if isempty(allResults)
+    fprintf('ERROR: No results to export.\n');
     return;
 end
 
-resultsTable = struct2table([successfulResults{:}]);
+% Create table with proper column names
+resultsTable = cell2table(allResults, 'VariableNames', ...
+    {'FileName', 'QC_Passed', 'Band', 'Pair', 'PLI', 'wPLI', 'Significant', 'PValue'});
+
 outputPath = fullfile(config.output.folder, outputFilename);
 
 try
     writetable(resultsTable, outputPath);
     fprintf('Results saved to: %s\n\n', outputPath);
     fprintf('Summary:\n');
-    fprintf('  Files: %d/%d\n', sum(processingStatus), numFiles);
-    fprintf('  Bands: %d\n', numBands);
-    fprintf('  Pairs: %d\n\n', numPairs);
+    fprintf('  Files: %d\n', numFiles);
+    fprintf('  Rows: %d\n', height(resultsTable));
+    fprintf('  Format: Long (tidy data)\n\n');
 catch ME
     fprintf('ERROR saving results: %s\n', ME.message);
 end
@@ -267,7 +275,6 @@ fprintf('========================================\n');
 %% Helper Functions
 
 function channelIdx = findChannelIndex(channelLabels, targetLabel)
-% Find channel index with fuzzy matching
 matchIndices = find(contains(channelLabels, targetLabel, 'IgnoreCase', true));
 
 if isempty(matchIndices)
@@ -275,10 +282,8 @@ if isempty(matchIndices)
 elseif length(matchIndices) == 1
     channelIdx = matchIndices;
 else
-    % Multiple matches - select shortest label
     matchedLabels = channelLabels(matchIndices);
-    labelLengths = cellfun(@length, matchedLabels);
-    [~, shortestIdx] = min(labelLengths);
+    [~, shortestIdx] = min(cellfun(@length, matchedLabels));
     channelIdx = matchIndices(shortestIdx);
 end
 end
