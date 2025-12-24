@@ -1,7 +1,5 @@
 # Interhemispheric PLI Analysis Tool
 
----
-
 ## Overview
 
 MATLAB toolbox for computing Phase Lag Index (PLI) connectivity metrics between interhemispheric electrode pairs. Features automated batch processing, quality control, statistical validation, and publication-ready visualizations.
@@ -16,15 +14,11 @@ MATLAB toolbox for computing Phase Lag Index (PLI) connectivity metrics between 
 **Default Electrode Pairs (10-20 System):**
 Fp1-Fp2, F7-F8, F3-F4, T3-T4, C3-C4, T5-T6, P3-P4, O1-O2
 
----
-
 ## Prerequisites
 
 - MATLAB R2016b or later
 - EEGLAB toolbox (added to MATLAB path)
 - Signal Processing Toolbox
-
----
 
 ## Usage
 
@@ -45,8 +39,6 @@ Fp1-Fp2, F7-F8, F3-F4, T3-T4, C3-C4, T5-T6, P3-P4, O1-O2
 | SET         | `.set`    | EEGLAB native format              |
 | MAT         | `.mat`    | Must contain variable named `EEG` |
 | BrainVision | `.vhdr`   | Header file                       |
-
----
 
 ## Configuration
 
@@ -96,8 +88,6 @@ Edit `config_pli.m` to customize. All options explained below:
 | `folder`   | `'output'`           | Output directory name |
 | `filename` | `'PLI_Results.xlsx'` | Results file name     |
 
----
-
 ## Output
 
 ### Excel Columns
@@ -116,8 +106,6 @@ Edit `config_pli.m` to customize. All options explained below:
 - **0.4-0.6**: Strong connectivity
 - **0.6-1.0**: Very strong (verify data quality)
 
----
-
 ## File Structure
 
 ```
@@ -134,8 +122,6 @@ PLI-Analysis/
     └── figures/
 ```
 
----
-
 ## Troubleshooting
 
 **No EEG files found:** Place EEG files in the `data/` folder.
@@ -146,13 +132,9 @@ PLI-Analysis/
 
 **MAT file error:** Ensure your `.mat` file contains a variable named `EEG` with standard EEGLAB structure.
 
----
-
 ## Acknowledgment
 
 If this toolbox helped your research, a brief acknowledgment is appreciated.
-
----
 
 ## References
 
