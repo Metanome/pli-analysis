@@ -135,11 +135,3 @@ PLI-Analysis/
 ## Acknowledgment
 
 If this toolbox helped your research, a brief acknowledgment is appreciated.
-
-## References
-
-**PLI Method:**
-Stam, C. J., Nolte, G., & Daffertshofer, A. (2007). Phase lag index: assessment of functional connectivity from multi-channel EEG and MEG. *Human Brain Mapping*, 28(11), 1178-1193.
-
-**wPLI Method:**
-Vinck, M., et al. (2011). An improved index of phase-synchronization for electrophysiological data. *NeuroImage*, 55(4), 1548-1565.
