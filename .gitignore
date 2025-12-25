@@ -1,0 +1,17 @@
+# Data folders (user-specific)
+data/
+output/
+
+# MATLAB temporary files
+*.asv
+*.m~
+*.autosave
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE settings
+.vscode/
+.idea/

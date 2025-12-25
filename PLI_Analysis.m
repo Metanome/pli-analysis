@@ -78,6 +78,18 @@ bandNames = fieldnames(frequencyBands);
 numBands = length(bandNames);
 numPairs = size(interhemisphericPairs, 1);
 
+% Build dynamic column headers based on config
+colHeaders = {'FileName'};
+if config.qc.enabled, colHeaders{end+1} = 'QC_Passed'; end
+colHeaders = [colHeaders, {'Band', 'Pair'}];
+if config.analysis.computePLI, colHeaders{end+1} = 'PLI'; end
+if config.analysis.computeWPLI, colHeaders{end+1} = 'wPLI'; end
+if config.analysis.computeSignificance
+    colHeaders{end+1} = 'Significant';
+    colHeaders{end+1} = 'PValue';
+end
+numCols = length(colHeaders);
+
 % Initialize results table (long format)
 allResults = {};
 rowIdx = 0;
@@ -148,6 +160,11 @@ for fileIdx = 1:numFiles
             else
                 fprintf(' [OK]\n');
             end
+
+            % Save QC report to file
+            if config.qc.saveReport
+                saveQCReport(qc, currentFilename, config);
+            end
         end
 
         %% Process Each Frequency Band
@@ -209,16 +226,25 @@ for fileIdx = 1:numFiles
                     if isnan(rightIdx), fprintf('    Warning: %s not found\n', rightElectrode); end
                 end
 
-                % Add row to results (long format)
+                % Add row to results (long format, dynamic columns)
                 rowIdx = rowIdx + 1;
-                allResults{rowIdx, 1} = string(currentFilename);
-                allResults{rowIdx, 2} = qcPassed;
-                allResults{rowIdx, 3} = string(currentBand);
-                allResults{rowIdx, 4} = string(pairName);
-                allResults{rowIdx, 5} = pliValue;
-                allResults{rowIdx, 6} = wpliValue;
-                allResults{rowIdx, 7} = isSig;
-                allResults{rowIdx, 8} = pVal;
+                colIdx = 0;
+                colIdx = colIdx + 1; allResults{rowIdx, colIdx} = string(currentFilename);
+                if config.qc.enabled
+                    colIdx = colIdx + 1; allResults{rowIdx, colIdx} = qcPassed;
+                end
+                colIdx = colIdx + 1; allResults{rowIdx, colIdx} = string(currentBand);
+                colIdx = colIdx + 1; allResults{rowIdx, colIdx} = string(pairName);
+                if config.analysis.computePLI
+                    colIdx = colIdx + 1; allResults{rowIdx, colIdx} = pliValue;
+                end
+                if config.analysis.computeWPLI
+                    colIdx = colIdx + 1; allResults{rowIdx, colIdx} = wpliValue;
+                end
+                if config.analysis.computeSignificance
+                    colIdx = colIdx + 1; allResults{rowIdx, colIdx} = isSig;
+                    colIdx = colIdx + 1; allResults{rowIdx, colIdx} = pVal;
+                end
             end
         end
 
@@ -251,9 +277,8 @@ if isempty(allResults)
     return;
 end
 
-% Create table with proper column names
-resultsTable = cell2table(allResults, 'VariableNames', ...
-    {'FileName', 'QC_Passed', 'Band', 'Pair', 'PLI', 'wPLI', 'Significant', 'PValue'});
+% Create table with dynamic column names
+resultsTable = cell2table(allResults, 'VariableNames', colHeaders);
 
 outputPath = fullfile(config.output.folder, outputFilename);
 
@@ -285,5 +310,38 @@ else
     matchedLabels = channelLabels(matchIndices);
     [~, shortestIdx] = min(cellfun(@length, matchedLabels));
     channelIdx = matchIndices(shortestIdx);
+end
+end
+
+function saveQCReport(qc, filename, config)
+% Save QC report to text file
+qcPath = fullfile(config.output.folder, config.output.qcSubfolder);
+[~, baseName, ~] = fileparts(filename);
+reportPath = fullfile(qcPath, sprintf('QC_%s.txt', baseName));
+
+try
+    fid = fopen(reportPath, 'w');
+    fprintf(fid, 'Quality Control Report\n');
+    fprintf(fid, '======================\n\n');
+    fprintf(fid, 'File: %s\n', filename);
+    fprintf(fid, 'Date: %s\n\n', char(qc.timestamp));
+    fprintf(fid, 'Status: %s\n\n', qc.status);
+    fprintf(fid, 'Metrics:\n');
+    fprintf(fid, '  Duration: %.2f seconds\n', qc.duration);
+    fprintf(fid, '  Sampling Rate: %.1f Hz\n', qc.samplingRate);
+    fprintf(fid, '  Channels: %d\n', qc.numChannels);
+    fprintf(fid, '  Bad Channels: %d\n', qc.numBadChannels);
+    fprintf(fid, '  Mean Variance: %.4f\n', qc.meanVariance);
+    fprintf(fid, '  Max Amplitude: %.2f uV\n', qc.maxAmplitude);
+
+    if ~isempty(qc.warnings)
+        fprintf(fid, '\nWarnings:\n');
+        for w = 1:length(qc.warnings)
+            fprintf(fid, '  - %s\n', qc.warnings{w});
+        end
+    end
+    fclose(fid);
+catch
+    warning('Failed to save QC report for %s', filename);
 end
 end

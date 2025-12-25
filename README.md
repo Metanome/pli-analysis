@@ -45,11 +45,11 @@ Fp1-Fp2, F7-F8, F3-F4, T3-T4, C3-C4, T5-T6, P3-P4, O1-O2
 Edit `config_pli.m` to customize. All options explained below:
 
 ### Analysis Options
-| Setting               | Default | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| `computePLI`          | `true`  | Compute standard Phase Lag Index   |
-| `computeWPLI`         | `true`  | Compute Weighted PLI (more robust) |
-| `computeSignificance` | `true`  | Run statistical testing (slower)   |
+| Setting               | Default | Description                                  |
+| --------------------- | ------- | -------------------------------------------- |
+| `computePLI`          | `true`  | Compute standard Phase Lag Index             |
+| `computeWPLI`         | `true`  | Compute Weighted PLI (more robust)           |
+| `computeSignificance` | `false` | Statistical testing (slow, enable if needed) |
 
 ### Frequency Bands
 | Band  | Range (Hz) | Associated With                   |
@@ -61,12 +61,12 @@ Edit `config_pli.m` to customize. All options explained below:
 | Gamma | 30-45      | High-level cognitive processing   |
 
 ### Visualization
-| Setting             | Default | Description                       |
-| ------------------- | ------- | --------------------------------- |
-| `generateTopoplots` | `true`  | Create scalp maps for each file   |
-| `saveFigures`       | `true`  | Save figures to disk              |
-| `figureFormat`      | `'png'` | Format: `'png'`, `'jpg'`, `'fig'` |
-| `figureResolution`  | `300`   | DPI for saved figures             |
+| Setting             | Default | Description                          |
+| ------------------- | ------- | ------------------------------------ |
+| `generateTopoplots` | `false` | Create scalp maps (enable if needed) |
+| `saveFigures`       | `true`  | Save figures to disk                 |
+| `figureFormat`      | `'png'` | Format: `'png'`, `'jpg'`, `'fig'`    |
+| `figureResolution`  | `300`   | DPI for saved figures                |
 
 ### Quality Control
 | Setting                | Default | Description                                 |
@@ -75,6 +75,7 @@ Edit `config_pli.m` to customize. All options explained below:
 | `minVarianceThreshold` | `0.1`   | Min channel variance (detect dead channels) |
 | `maxBadChannels`       | `5`     | Max bad channels before QC fails            |
 | `minDuration`          | `5`     | Min recording length in seconds             |
+| `saveReport`           | `false` | Save detailed QC reports to files           |
 
 ### Statistics
 | Setting         | Default | Description                                            |
@@ -93,16 +94,18 @@ Edit `config_pli.m` to customize. All options explained below:
 Results are saved in **long format** (tidy data) - easy to filter, pivot, and analyze.
 
 ### Excel Columns
-| Column        | Description                                       |
-| ------------- | ------------------------------------------------- |
-| `FileName`    | Source EEG file                                   |
-| `QC_Passed`   | Quality control status (TRUE/FALSE)               |
-| `Band`        | Frequency band (Delta, Theta, Alpha, Beta, Gamma) |
-| `Pair`        | Electrode pair (e.g., Fp1-Fp2)                    |
-| `PLI`         | Phase Lag Index (0-1)                             |
-| `wPLI`        | Weighted PLI (0-1)                                |
-| `Significant` | Statistical significance (TRUE/FALSE)             |
-| `PValue`      | P-value from surrogate testing                    |
+| Column        | Description                    | Appears When                 |
+| ------------- | ------------------------------ | ---------------------------- |
+| `FileName`    | Source EEG file                | Always                       |
+| `QC_Passed`   | Quality control status         | `qc.enabled = true`          |
+| `Band`        | Frequency band                 | Always                       |
+| `Pair`        | Electrode pair                 | Always                       |
+| `PLI`         | Phase Lag Index (0-1)          | `computePLI = true`          |
+| `wPLI`        | Weighted PLI (0-1)             | `computeWPLI = true`         |
+| `Significant` | Statistical significance       | `computeSignificance = true` |
+| `PValue`      | P-value from surrogate testing | `computeSignificance = true` |
+
+> Columns only appear when their corresponding config option is enabled.
 
 ### Example Output
 | FileName  | QC_Passed | Band  | Pair    | PLI  | wPLI | Significant | PValue |
@@ -127,10 +130,12 @@ PLI-Analysis/
 ├── compute_significance.m      # Statistical testing
 ├── compute_quality_metrics.m   # Quality control
 ├── generate_topoplots.m        # Visualization
+├── README.md                   # Documentation
 ├── data/                       # Place EEG files here
 └── output/                     # Created automatically
     ├── PLI_Results.xlsx
-    └── figures/
+    ├── figures/
+    └── quality_control/
 ```
 
 ## Troubleshooting

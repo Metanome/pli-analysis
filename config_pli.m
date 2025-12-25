@@ -5,10 +5,10 @@ function config = config_pli()
 
 config = struct();
 
-%% Analysis
+%% Analysis (Core)
 config.analysis.computePLI = true;
 config.analysis.computeWPLI = true;
-config.analysis.computeSignificance = true;
+config.analysis.computeSignificance = false;  % Slow - enable if needed
 
 %% Frequency Bands (Hz)
 config.bands.Delta = [0.5, 4];
@@ -29,20 +29,20 @@ config.pairs = {
     'O1',  'O2'
     };
 
-%% Visualization
-config.visualization.generateTopoplots = true;
+%% Visualization (Optional)
+config.visualization.generateTopoplots = true;  % Enable if needed
 config.visualization.saveFigures = true;
 config.visualization.figureFormat = 'png';
 config.visualization.figureResolution = 300;
 
 %% Quality Control
-config.qc.enabled = true;
+config.qc.enabled = false;
 config.qc.minVarianceThreshold = 0.1;
 config.qc.maxBadChannels = 5;
 config.qc.minDuration = 5;
-config.qc.saveReport = true;
+config.qc.saveReport = false;  % Set true for detailed reports
 
-%% Statistics
+%% Statistics (Only used if computeSignificance = true)
 config.stats.numSurrogates = 1000;
 config.stats.alphaLevel = 0.05;
 config.stats.method = 'circular_shift';
