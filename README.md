@@ -61,17 +61,17 @@ Edit `config_pli.m` to customize. All options explained below:
 | Gamma | 30-45      | High-level cognitive processing   |
 
 ### Visualization
-| Setting             | Default | Description                          |
-| ------------------- | ------- | ------------------------------------ |
-| `generateTopoplots` | `false` | Create scalp maps (enable if needed) |
-| `saveFigures`       | `true`  | Save figures to disk                 |
-| `figureFormat`      | `'png'` | Format: `'png'`, `'jpg'`, `'fig'`    |
-| `figureResolution`  | `300`   | DPI for saved figures                |
+| Setting             | Default | Description                               |
+| ------------------- | ------- | ----------------------------------------- |
+| `generateTopoplots` | `true`  | Create scalp maps (disable if not needed) |
+| `saveFigures`       | `true`  | Save figures to disk                      |
+| `figureFormat`      | `'png'` | Format: `'png'`, `'jpg'`, `'fig'`         |
+| `figureResolution`  | `300`   | DPI for saved figures                     |
 
 ### Quality Control
 | Setting                | Default | Description                                 |
 | ---------------------- | ------- | ------------------------------------------- |
-| `qc.enabled`           | `true`  | Run automated data quality checks           |
+| `qc.enabled`           | `false` | Run automated data quality checks           |
 | `minVarianceThreshold` | `0.1`   | Min channel variance (detect dead channels) |
 | `maxBadChannels`       | `5`     | Max bad channels before QC fails            |
 | `minDuration`          | `5`     | Min recording length in seconds             |
