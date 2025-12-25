@@ -131,6 +131,8 @@ PLI-Analysis/
 ├── compute_quality_metrics.m   # Quality control
 ├── generate_topoplots.m        # Visualization
 ├── README.md                   # Documentation
+├── LICENSE                     # GPL-3.0 License
+├── .gitignore                  # Git ignore rules
 ├── data/                       # Place EEG files here
 └── output/                     # Created automatically
     ├── PLI_Results.xlsx
